@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.special import erfc
 import sys
+import argparse
 from pathlib import Path
 
 
@@ -110,15 +111,20 @@ class BERPlotter:
 
 
 def main():
-    M = 16
+    parser = argparse.ArgumentParser(description='График BER для QAM')
+    parser.add_argument('--input', default='ber_results.txt')
+    parser.add_argument('--M', type=int, default=16, choices=[4, 16, 64])
+    parser.add_argument('--output', default='ber_plot.png')
+    args = parser.parse_args()
+
     try:
-        var_sim, ber_sim = load_simulation_data()
+        var_sim, ber_sim = load_simulation_data(args.input)
     except (FileNotFoundError, ValueError) as e:
         print(f"Ошибка загрузки данных: {e}")
         sys.exit(1)
 
-    plotter = BERPlotter(M)
-    plotter.plot(var_sim, ber_sim)
+    plotter = BERPlotter(args.M)
+    plotter.plot(var_sim, ber_sim, save_path=args.output)
 
 
 if __name__ == "__main__":

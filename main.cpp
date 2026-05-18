@@ -2,6 +2,8 @@
 #include <fstream>
 #include <vector>
 #include <utility>
+#include <string>
+#include <cstring>
 #include <algorithm>
 #include "modulator.h"
 #include "demodulator.h"
@@ -63,18 +65,34 @@ std::vector<SimResult> run_simulation(const SimParams& params,
     return results;
 }
 
-int main() {
-    constexpr SimParams params {
-        .M = 16,
-        .num_bits = 1'000'000,
-        .bit_seed = 42,
-        .channel_seed_base = 43
-    };
+int main(int argc, char* argv[]) {
+    int M = 16;
+    size_t num_bits = 1'000'000;
+    unsigned int bit_seed = 42;
+    std::string out_filename = "ber_results.txt";
+
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--M") == 0 && i + 1 < argc)
+            M = std::stoi(argv[++i]);
+        else if (std::strcmp(argv[i], "--num-bits") == 0 && i + 1 < argc)
+            num_bits = std::stoull(argv[++i]);
+        else if (std::strcmp(argv[i], "--seed") == 0 && i + 1 < argc)
+            bit_seed = std::stoul(argv[++i]);
+        else if (std::strcmp(argv[i], "--out") == 0 && i + 1 < argc)
+            out_filename = argv[++i];
+    }
+
+    if (M != 4 && M != 16 && M != 64) {
+        std::cerr << "M должно быть 4, 16 или 64\n";
+        return 1;
+    }
+
+    SimParams params{M, num_bits, bit_seed, static_cast<unsigned int>(bit_seed + 1)};
     const std::vector<double> variances = {0.05, 0.1, 0.2, 0.5, 1.0, 2.0};
 
     auto results = run_simulation(params, variances);
 
-    std::ofstream out("ber_results.txt");
+    std::ofstream out(out_filename);
     if (!out) {
         std::cerr << "Ошибка открытия файла\n";
         return 1;
