@@ -12,3 +12,9 @@ add_executable(qam_sim
 )
 
 target_include_directories(qam_sim PRIVATE include)
+
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(qam_sim PRIVATE OpenMP::OpenMP_CXX)
+    target_compile_definitions(qam_sim PRIVATE USE_OPENMP)
+endif()
