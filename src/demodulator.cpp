@@ -10,7 +10,7 @@ Demodulator::Demodulator(int M,
         throw std::invalid_argument("Демодулятор: M должен быть 4, 16 или 64");
     if (static_cast<int>(constellation.size()) != M ||
         static_cast<int>(mapping.size()) != M)
-        throw std::invalid_argument("Демодулятор: constellation/mapping size must match M");
+        throw std::invalid_argument("Демодулятор: размер созвездия или таблицы битовых меток не совпадает с M");
 
     m_ = M;
     k_ = static_cast<int>(std::log2(M));
