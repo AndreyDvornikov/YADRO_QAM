@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <utility>
+#include <algorithm>
 #include "modulator.h"
 #include "demodulator.h"
 #include "awgn.h"
@@ -35,8 +36,11 @@ std::vector<SimResult> run_simulation(const SimParams& params,
     std::vector<SimResult> results;
     results.reserve(variances.size());
 
-    for (double var : variances) {
-        AwgnChannel channel(var, params.channel_seed_base);
+    #pragma omp parallel for
+    for (size_t idx = 0; idx < variances.size(); ++idx) {
+        double var = variances[idx];
+        unsigned int seed = params.channel_seed_base + static_cast<unsigned int>(idx);
+        AwgnChannel channel(var, seed);
         size_t errors = 0;
 
         for (size_t i = 0; i + k <= params.num_bits; i += k) {
@@ -49,9 +53,13 @@ std::vector<SimResult> run_simulation(const SimParams& params,
         }
 
         double ber = static_cast<double>(errors) / params.num_bits;
+        #pragma omp critical
         results.push_back({var, ber});
     }
-
+    std::sort(results.begin(), results.end(),
+          [](const SimResult& a, const SimResult& b) {
+              return a.variance < b.variance;
+          });
     return results;
 }
 
